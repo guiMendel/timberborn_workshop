@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <AssemblyName>ChooseYourTrees</AssemblyName>
     <RootNamespace>ChooseYourTrees</RootNamespace>
     <Nullable>enable</Nullable>
@@ -11,6 +12,8 @@
     <OutputPath>dist/Scripts/</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
+
+  <ItemGroup><Compile Remove="tests/**/*.cs" /></ItemGroup>
 
   <ItemGroup>
     <Reference Include="$(TimberbornManagedPath)/Timberborn*.dll" Private="false" />

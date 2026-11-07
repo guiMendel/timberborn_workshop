@@ -19,7 +19,7 @@ Extend the existing **Assign Priority** tool to set tree-cutting priority, inclu
 - Provide a setting through Mod Settings to choose whether priority belongs to a tile or an individual tree. Default to **tile**.
 - In tile mode, priority belongs to the tile and applies to trees that grow there later, including after a tree is cut.
 - In tree mode, priority belongs only to the individual tree; once it is chopped, a replacement starts at normal priority.
-- When switching modes, convert all active priorities to the new mode, preserving their priority values. Both the tree panel and Assign Priority tool must reflect the converted priorities.
+- When switching modes, convert all active priorities to the new mode, preserving their priority values. When switching to tree mode, discard priorities on tiles with no tree. Both the tree panel and Assign Priority tool must reflect the converted priorities.
 - Both the tree panel and Assign Priority tool must respect the selected mode.
 
 ## Errors and troubleshooting
