@@ -1,0 +1,17 @@
+{
+  "Name": "Choose Your Trees",
+  "Version": "0.1.0",
+  "Id": "ChooseYourTrees",
+  "MinimumGameVersion": "1.1.2.8",
+  "Description": "Prioritize individual trees for lumberjacking.",
+  "RequiredMods": [
+    {
+      "Id": "Harmony",
+      "MinimumVersion": "2.4.1"
+    },
+    {
+      "Id": "eMka.ModSettings",
+      "MinimumVersion": "1.1.1.0"
+    }
+  ]
+}

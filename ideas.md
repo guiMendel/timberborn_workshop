@@ -1,0 +1,3 @@
+- Highlight connected tubeway construction plans on selection
+- Set priority for cutting down specific trees
+- An automation that allows automatically pausing buildings where beavers are idle

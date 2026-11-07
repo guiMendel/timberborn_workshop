@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>ChooseYourTrees</AssemblyName>
+    <RootNamespace>ChooseYourTrees</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <DebugType>none</DebugType>
+    <OutputPath>dist/Scripts/</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(TimberbornManagedPath)/Timberborn*.dll" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)/UnityEngine*.dll" Private="false" />
+    <Reference Include="$(TimberbornManagedPath)/UnityEngine.dll" Private="false" />
+    <Reference Include="$(HarmonyAssemblyPath)" Private="false" />
+    <Reference Include="$(ModSettingsCoreAssemblyPath)" Private="false" />
+  </ItemGroup>
+
+  <Target Name="ValidateModReferencePaths" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(TimberbornManagedPath)' == ''" Text="Set TimberbornManagedPath to the installed game's Contents/Resources/Data/Managed directory." />
+    <Error Condition="'$(HarmonyAssemblyPath)' == ''" Text="Set HarmonyAssemblyPath to the installed 0Harmony.dll." />
+    <Error Condition="'$(ModSettingsCoreAssemblyPath)' == ''" Text="Set ModSettingsCoreAssemblyPath to ModSettings.Core.dll from Mod Settings 1.1.x." />
+    <Error Condition="!Exists('$(HarmonyAssemblyPath)')" Text="HarmonyAssemblyPath does not exist: $(HarmonyAssemblyPath)" />
+    <Error Condition="!Exists('$(ModSettingsCoreAssemblyPath)')" Text="ModSettingsCoreAssemblyPath does not exist: $(ModSettingsCoreAssemblyPath)" />
+    <Error Condition="!Exists('$(TimberbornManagedPath)/netstandard.dll')" Text="TimberbornManagedPath does not contain netstandard.dll: $(TimberbornManagedPath)" />
+  </Target>
+
+  <Target Name="StageModManifest" AfterTargets="Build">
+    <MakeDir Directories="$(MSBuildProjectDirectory)/dist" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/manifest.json" DestinationFolder="$(MSBuildProjectDirectory)/dist" />
+  </Target>
+</Project>
