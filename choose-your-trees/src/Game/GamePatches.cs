@@ -55,10 +55,6 @@ internal static class GamePatches
             harmony.Patch(cut, postfix: new HarmonyMethod(typeof(GamePatches), nameof(CutPostfix)));
             Patch(harmony, priorityTool, "ActionCallback", nameof(PriorityActionPrefix));
             Patch(harmony, priorityTool, "PreviewCallback", nameof(PriorityPreviewPrefix));
-            MethodInfo enter = AccessTools.Method(priorityTool, "Enter") ?? throw new MissingMethodException(priorityTool.FullName, "Enter");
-            MethodInfo exit = AccessTools.Method(priorityTool, "Exit") ?? throw new MissingMethodException(priorityTool.FullName, "Exit");
-            harmony.Patch(enter, postfix: new HarmonyMethod(typeof(GamePatches), nameof(PriorityToolEnterPostfix)));
-            harmony.Patch(exit, prefix: new HarmonyMethod(typeof(GamePatches), nameof(PriorityToolExitPrefix)));
             MethodInfo processInput = AccessTools.Method(priorityTool, "ProcessInput")
                 ?? throw new MissingMethodException(priorityTool.FullName, "ProcessInput");
             harmony.Patch(processInput, transpiler: new HarmonyMethod(typeof(GamePatches), nameof(PriorityPickerTranspiler)));
@@ -153,9 +149,6 @@ internal static class GamePatches
             Debug.LogWarning("[Choose Your Trees] Failed to collect lumberjack decision diagnostics: " + ex);
         }
     }
-
-    private static void PriorityToolEnterPostfix() => _priorities?.ShowPriorities();
-    private static void PriorityToolExitPrefix() => _priorities?.HidePriorities();
 
     private static void CutPostfix(Cuttable __instance) => _priorities?.OnTreeCut(__instance);
 

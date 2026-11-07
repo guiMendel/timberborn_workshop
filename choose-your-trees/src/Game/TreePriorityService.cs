@@ -9,6 +9,7 @@ using Timberborn.Forestry;
 using Timberborn.PrioritySystem;
 using Timberborn.PrioritySystemUI;
 using Timberborn.SingletonSystem;
+using Timberborn.ToolSystem;
 using UnityEngine;
 
 namespace ChooseYourTrees.Game;
@@ -70,7 +71,19 @@ internal sealed class TreePriorityService : IPostLoadableSingleton, IUnloadableS
         }
     }
 
-    public void ShowPriorities()
+    [OnEvent]
+    public void OnToolGroupEntered(ToolGroupEnteredEvent entered)
+    {
+        if (entered.ToolGroup != null && entered.ToolGroup.Id == "BuilderPriority") ShowPriorities();
+    }
+
+    [OnEvent]
+    public void OnToolGroupExited(ToolGroupExitedEvent exited)
+    {
+        if (exited.ToolGroup != null && exited.ToolGroup.Id == "BuilderPriority") HidePriorities();
+    }
+
+    private void ShowPriorities()
     {
         if (_showPriorities) return;
         _showPriorities = true;
@@ -84,17 +97,17 @@ internal sealed class TreePriorityService : IPostLoadableSingleton, IUnloadableS
             tiers[GetPriority(tree)]++;
             count++;
         }
-        Debug.Log($"[Choose Your Trees] Priority tool opened; trees={count} tinted-material-slots={_tint.RendererCount} " +
+        Debug.Log($"[Choose Your Trees] Priority menu opened; trees={count} tinted-material-slots={_tint.RendererCount} " +
             $"unsupported-material-slots={_tint.UnsupportedMaterials} tiers=[{string.Join(",", tiers)}]; " +
             $"first-material: {_tint.FirstMaterialInfo}; first-supported: {_tint.FirstSupportedInfo}.");
     }
 
-    public void HidePriorities()
+    private void HidePriorities()
     {
         if (!_showPriorities) return;
         _showPriorities = false;
         _tint.Clear();
-        Debug.Log($"[Choose Your Trees] Priority tool closed; restored {_tintedTrees.Count} tree colors.");
+        Debug.Log($"[Choose Your Trees] Priority menu closed; restored {_tintedTrees.Count} tree colors.");
         _tintedTrees.Clear();
     }
 
