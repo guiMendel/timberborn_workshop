@@ -1,0 +1,5 @@
+ID,Text,Comment
+ChooseYourTrees.Lumberjacking,Corte de árvores,
+ChooseYourTrees.Priority,Prioridade,
+ChooseYourTrees.ApplyToTiles,Manter prioridade no terreno,
+ChooseYourTrees.ApplyToTilesTooltip,"Ativado: árvores futuras no terreno herdam a prioridade. Desativado: a prioridade pertence à árvore atual.",

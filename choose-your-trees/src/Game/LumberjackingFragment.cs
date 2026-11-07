@@ -3,6 +3,7 @@ using Timberborn.BaseComponentSystem;
 using Timberborn.WorkSystemUI;
 using Timberborn.EntityPanelSystem;
 using Timberborn.Forestry;
+using Timberborn.Localization;
 using Timberborn.PrioritySystem;
 using Timberborn.PrioritySystemUI;
 using UnityEngine.UIElements;
@@ -14,25 +15,27 @@ internal sealed class LumberjackingFragment : IEntityPanelFragment
     private readonly PriorityToggleGroupFactory _priorityFactory;
     private readonly WorkplacePrioritySpriteLoader _sprites;
     private readonly TreePriorityService _priorities;
+    private readonly ILoc _loc;
     private VisualElement _root = null!;
     private PriorityToggleGroup _group = null!;
     private TreeComponent? _tree;
 
-    public LumberjackingFragment(PriorityToggleGroupFactory priorityFactory, WorkplacePrioritySpriteLoader sprites, TreePriorityService priorities)
+    public LumberjackingFragment(PriorityToggleGroupFactory priorityFactory, WorkplacePrioritySpriteLoader sprites, TreePriorityService priorities, ILoc loc)
     {
         _priorityFactory = priorityFactory;
         _sprites = sprites;
         _priorities = priorities;
+        _loc = loc;
     }
 
     public VisualElement InitializeFragment()
     {
         _root = new VisualElement();
         _root.AddToClassList("entity-panel-fragment");
-        var heading = new Label("Lumberjacking");
+        var heading = new Label(_loc.T("ChooseYourTrees.Lumberjacking"));
         heading.AddToClassList("entity-panel-fragment__title");
         _root.Add(heading);
-        _group = _priorityFactory.Create(_root, "Work.PriorityTitle", _sprites, "", "");
+        _group = _priorityFactory.Create(_root, "ChooseYourTrees.Priority", _sprites, "", "");
         _root.style.display = DisplayStyle.None;
         return _root;
     }

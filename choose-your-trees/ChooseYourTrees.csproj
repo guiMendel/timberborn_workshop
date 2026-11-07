@@ -36,5 +36,7 @@
   <Target Name="StageModManifest" AfterTargets="Build">
     <MakeDir Directories="$(MSBuildProjectDirectory)/dist" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)/manifest.json" DestinationFolder="$(MSBuildProjectDirectory)/dist" />
+    <ItemGroup><LocalizationFiles Include="$(MSBuildProjectDirectory)/Localizations/*.csv" /></ItemGroup>
+    <Copy SourceFiles="@(LocalizationFiles)" DestinationFolder="$(MSBuildProjectDirectory)/dist/Localizations" />
   </Target>
 </Project>

@@ -1,0 +1,5 @@
+ID,Text,Comment
+ChooseYourTrees.Lumberjacking,Lumberjacking,
+ChooseYourTrees.Priority,Priority,
+ChooseYourTrees.ApplyToTiles,Keep priority on the tile,
+ChooseYourTrees.ApplyToTilesTooltip,"On: future trees on a tile inherit its priority. Off: priority belongs to the current tree.",

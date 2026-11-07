@@ -1,6 +1,6 @@
 # Choose Your Trees
 
-Project scaffolding for the mod described in [REQUIREMENTS.md](REQUIREMENTS.md) and [PLAN.md](PLAN.md). No gameplay implementation is present yet.
+Work-in-progress implementation of the mod described in [REQUIREMENTS.md](REQUIREMENTS.md) and [PLAN.md](PLAN.md). No gameplay implementation is present yet.
 
 ## Compatibility baseline
 
@@ -23,8 +23,18 @@ DOTNET_ROOT="$HOME/.dotnet" "$HOME/.dotnet/dotnet" build ChooseYourTrees.csproj 
   -p:ModSettingsCoreAssemblyPath="/path/to/ModSettings/Scripts/ModSettings.Core.dll"
 ```
 
-The build output is staged under `dist/` with the manifest at its root and the mod assembly under `Scripts/`. Do not copy the referenced game or dependency assemblies into the package. The installed local paths observed during setup are listed in [TOOLCHAIN.md](TOOLCHAIN.md) when available; paths above are intentionally supplied per machine.
+The build output is staged under `dist/` with the manifest at its root, the mod assembly under `Scripts/`, and translations under `Localizations/`. Do not copy the referenced game or dependency assemblies into the package. The installed local paths observed during setup are listed in [TOOLCHAIN.md](TOOLCHAIN.md) when available; paths above are intentionally supplied per machine.
 
 ## Current state
 
-This is only project infrastructure. There is no gameplay source or runtime behavior yet. Exact API contracts, hooks, UI behavior, persistence semantics, dependency API usage, and chopping progress remain to be investigated as set out in the plan. The empty scaffold builds and stages its assembly, but it has not been loaded or tested in-game.
+The project builds and has focused checks for priority storage, conversion and restore. Tree-panel controls, Assign Priority integration, lumberjack selection, saved priorities and Mod Settings integration are implemented but **have not been loaded or tested in-game**. Do not consider the package ready for normal saves yet.
+
+A tree's removal work is timed on the worker rather than exposed as durable partial chopping on the tree. An accurate chopping progress bar is not yet implemented; investigate live work and interruptions before deciding whether one can be shown reliably.
+
+Run the isolated state checks with:
+
+```sh
+DOTNET_ROOT="$HOME/.dotnet" "$HOME/.dotnet/dotnet" run --project tests/PriorityStoreChecks.csproj
+```
+
+Use a separate test save when beginning in-game verification. Review the [plan](PLAN.md) for the remaining acceptance checks.

@@ -15,19 +15,16 @@ internal sealed class TreePriorityService : IPostLoadableSingleton, IUnloadableS
     private readonly PriorityStore _store;
     private readonly TreeModSettings _settings;
     private readonly EntityRegistry _entities;
-    private readonly EventBus _events;
 
-    public TreePriorityService(PriorityPersistence persistence, TreeModSettings settings, EntityRegistry entities, EventBus events)
+    public TreePriorityService(PriorityPersistence persistence, TreeModSettings settings, EntityRegistry entities)
     {
         _store = persistence.Store;
         _settings = settings;
         _entities = entities;
-        _events = events;
     }
 
     public void PostLoad()
     {
-        _events.Register(this);
         _settings.ApplyToTiles.ValueChanged += OnModeChanged;
         ConvertMode(_settings.ApplyToTiles.Value);
         GamePatches.Install(this);
@@ -37,16 +34,14 @@ internal sealed class TreePriorityService : IPostLoadableSingleton, IUnloadableS
     {
         GamePatches.Uninstall();
         _settings.ApplyToTiles.ValueChanged -= OnModeChanged;
-        _events.Unregister(this);
     }
 
     public int GetPriority(TreeComponent tree) => _store.Get(Location(tree));
     public void SetPriority(TreeComponent tree, int priority) => _store.Set(Location(tree), priority);
 
-    [OnEvent]
-    public void OnTreeCut(CuttableCutEvent ev)
+    public void OnTreeCut(Cuttable cuttable)
     {
-        var tree = ev.Cuttable.GetComponent<TreeComponent>();
+        var tree = cuttable.GetComponent<TreeComponent>();
         if (tree != null) _store.ForgetTree(tree.GetComponent<EntityComponent>().EntityId);
     }
 

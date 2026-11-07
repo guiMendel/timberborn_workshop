@@ -8,6 +8,7 @@ using Timberborn.AreaSelectionSystem;
 using Timberborn.AreaSelectionSystemUI;
 using Timberborn.BlockSystem;
 using Timberborn.BuilderPrioritySystem;
+using Timberborn.Cutting;
 using Timberborn.Forestry;
 using Timberborn.InventorySystem;
 using Timberborn.Navigation;
@@ -39,6 +40,9 @@ internal static class GamePatches
                 ?? throw new MissingFieldException(priorityTool.FullName, "_priority");
             _priorities = priorities;
             Patch(harmony, lumberjack, "FindCuttable", nameof(FindCuttablePrefix));
+            MethodInfo cut = AccessTools.Method(typeof(Cuttable), "Cut")
+                ?? throw new MissingMethodException(typeof(Cuttable).FullName, "Cut");
+            harmony.Patch(cut, postfix: new HarmonyMethod(typeof(GamePatches), nameof(CutPostfix)));
             Patch(harmony, priorityTool, "ActionCallback", nameof(PriorityActionPrefix));
             Patch(harmony, priorityTool, "PreviewCallback", nameof(PriorityPreviewPrefix));
             MethodInfo processInput = AccessTools.Method(priorityTool, "ProcessInput")
@@ -95,6 +99,8 @@ internal static class GamePatches
         // Preserve the vanilla status result when no eligible tree was found.
         return true;
     }
+
+    private static void CutPostfix(Cuttable __instance) => _priorities?.OnTreeCut(__instance);
 
     private static void PriorityActionPrefix(object __instance, IEnumerable<BlockObject> blockObjects)
     {

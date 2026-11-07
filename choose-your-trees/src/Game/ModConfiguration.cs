@@ -9,8 +9,8 @@ namespace ChooseYourTrees.Game;
 internal sealed class TreeModSettings : ModSettingsOwner
 {
     public ModSetting<bool> ApplyToTiles { get; } = new(true,
-        ModSettingDescriptor.Create("Keep priority on the tile")
-            .SetTooltip("On: future trees on a tile inherit its priority. Off: priority belongs to the current tree."));
+        ModSettingDescriptor.CreateLocalized("ChooseYourTrees.ApplyToTiles")
+            .SetLocalizedTooltip("ChooseYourTrees.ApplyToTilesTooltip"));
 
     public TreeModSettings(ISettings settings, ModSettingsOwnerRegistry registry, ModRepository repository)
         : base(settings, registry, repository) { }
