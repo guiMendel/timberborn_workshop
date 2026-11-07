@@ -22,6 +22,12 @@ Extend the existing **Assign Priority** tool to set tree-cutting priority, inclu
 - When switching modes, convert all active priorities to the new mode, preserving their priority values. Both the tree panel and Assign Priority tool must reflect the converted priorities.
 - Both the tree panel and Assign Priority tool must respect the selected mode.
 
+## Errors and troubleshooting
+
+- Provide informative, mod-specific errors when operations fail, with relevant context and the underlying cause where available.
+- Log useful lifecycle events and failures to help diagnose configuration, compatibility, priority changes, persistence, and mode conversion without flooding the log during normal play.
+- Handle failures safely: do not silently lose priority data or disrupt unrelated game behavior. Validate error paths and useful diagnostics during testing.
+
 ## Persistence and scope
 
 - Tree priority and any displayed chopping progress must remain correct across save and load.
