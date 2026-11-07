@@ -30,10 +30,12 @@ internal sealed class TreePriorityService : IPostLoadableSingleton, IUnloadableS
         _events.Register(this);
         _settings.ApplyToTiles.ValueChanged += OnModeChanged;
         ConvertMode(_settings.ApplyToTiles.Value);
+        GamePatches.Install(this);
     }
 
     public void Unload()
     {
+        GamePatches.Uninstall();
         _settings.ApplyToTiles.ValueChanged -= OnModeChanged;
         _events.Unregister(this);
     }
@@ -57,7 +59,7 @@ internal sealed class TreePriorityService : IPostLoadableSingleton, IUnloadableS
         try
         {
             var trees = _entities.Entities.Select(entity => entity.GetComponent<TreeComponent>())
-                .Where(tree => tree != null).Select(Location).ToArray();
+                .Where(tree => tree != null && IsUncutTree(tree)).Select(Location).ToArray();
             _store.SwitchMode(target, trees);
             Debug.Log($"[Choose Your Trees] Converted priorities to {target} mode for {trees.Length} existing trees.");
         }
@@ -67,6 +69,12 @@ internal sealed class TreePriorityService : IPostLoadableSingleton, IUnloadableS
             Debug.LogException(failure);
             throw failure;
         }
+    }
+
+    private static bool IsUncutTree(TreeComponent tree)
+    {
+        var cuttable = tree.GetComponent<Cuttable>();
+        return cuttable != null && !cuttable.Yielder.IsYieldRemoved;
     }
 
     private static TreeLocation Location(TreeComponent tree)

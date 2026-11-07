@@ -1,6 +1,7 @@
 using Bindito.Core;
 using ModSettings.Core;
 using Timberborn.Modding;
+using Timberborn.EntityPanelSystem;
 using Timberborn.SettingsSystem;
 
 namespace ChooseYourTrees.Game;
@@ -32,5 +33,7 @@ internal sealed class GameConfigurator : Configurator
     {
         Bind<PriorityPersistence>().AsSingleton();
         Bind<TreePriorityService>().AsSingleton();
+        Bind<LumberjackingFragment>().AsSingleton();
+        MultiBind<EntityPanelModule>().ToProvider<TreePanelProvider>().AsSingleton();
     }
 }
