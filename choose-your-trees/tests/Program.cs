@@ -35,4 +35,20 @@ try
 }
 catch (InvalidOperationException) { }
 Check(restored.Mode == PriorityMode.Tile && restored.Get(a) == 3, "Failed restore must not change state.");
+restored.Set(b, 1);
+restored.SwitchMode(PriorityMode.Tree, new[] { a, b });
+Check(restored.Get(a) == 3 && restored.Get(b) == 1, "Both occupied priorities convert independently.");
+var restoredTrees = new PriorityStore();
+restoredTrees.Restore(restored.Mode, restored.TileEntries, restored.TreeEntries);
+Check(restoredTrees.Get(a) == 3 && restoredTrees.Get(b) == 1, "Saved tree priorities round-trip.");
+restoredTrees.ForgetTree(a.TreeId);
+Check(restoredTrees.Get(a) == PriorityStore.Normal && restoredTrees.Get(b) == 1, "Cutting affects only the selected tree.");
+try
+{
+    restoredTrees.Restore(PriorityMode.Tree, Array.Empty<KeyValuePair<(int, int, int), int>>(),
+        new[] { new KeyValuePair<Guid, int>(b.TreeId, 99) });
+    throw new Exception("Invalid saved priority accepted.");
+}
+catch (ArgumentOutOfRangeException) { }
+Check(restoredTrees.Get(b) == 1, "Invalid saved priority leaves existing values intact.");
 Console.WriteLine("Priority store checks passed.");

@@ -106,11 +106,15 @@ internal static class GamePatches
     {
         if (_priorities == null || _priorityField == null) return;
         var priority = (Timberborn.PrioritySystem.Priority)_priorityField.GetValue(__instance);
+        int changed = 0;
         foreach (BlockObject block in blockObjects)
         {
             var tree = block.GetComponent<TreeComponent>();
-            if (tree != null) _priorities.SetPriority(tree, (int)priority);
+            if (tree == null) continue;
+            _priorities.SetPriority(tree, (int)priority);
+            changed++;
         }
+        if (changed > 0) Debug.Log($"[Choose Your Trees] Assigned priority {priority} to {changed} trees using the priority tool.");
     }
 
     private static bool PriorityPreviewPrefix(object __instance, IEnumerable<BlockObject> blockObjects,

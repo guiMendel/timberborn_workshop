@@ -6,6 +6,7 @@ using Timberborn.Forestry;
 using Timberborn.Localization;
 using Timberborn.PrioritySystem;
 using Timberborn.PrioritySystemUI;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace ChooseYourTrees.Game;
@@ -68,7 +69,11 @@ internal sealed class LumberjackingFragment : IEntityPanelFragment
         private readonly TreePriorityService _priorities;
         public TreePrioritizable(TreeComponent tree, TreePriorityService priorities) { _tree = tree; _priorities = priorities; }
         public Priority Priority => (Priority)_priorities.GetPriority(_tree);
-        public void SetPriority(Priority priority) => _priorities.SetPriority(_tree, (int)priority);
+        public void SetPriority(Priority priority)
+        {
+            _priorities.SetPriority(_tree, (int)priority);
+            Debug.Log($"[Choose Your Trees] Changed selected tree priority to {priority}.");
+        }
     }
 }
 
