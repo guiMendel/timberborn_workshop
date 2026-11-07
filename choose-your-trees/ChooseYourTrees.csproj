@@ -16,6 +16,7 @@
   <ItemGroup><Compile Remove="tests/**/*.cs" /></ItemGroup>
 
   <ItemGroup>
+    <Reference Include="$(TimberbornManagedPath)/Bindito*.dll" Private="false" />
     <Reference Include="$(TimberbornManagedPath)/Timberborn*.dll" Private="false" />
     <Reference Include="$(TimberbornManagedPath)/UnityEngine*.dll" Private="false" />
     <Reference Include="$(TimberbornManagedPath)/UnityEngine.dll" Private="false" />
