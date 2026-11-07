@@ -25,4 +25,14 @@ catch (InvalidOperationException) { }
 Check(store.Mode == PriorityMode.Tile && store.Get(a) == 3, "Failed conversion must not lose state.");
 try { store.Set(a, 5); throw new Exception("Invalid priority accepted."); }
 catch (ArgumentOutOfRangeException) { }
+var restored = new PriorityStore();
+restored.Restore(store.Mode, store.TileEntries, store.TreeEntries);
+Check(restored.Get(a) == 3, "Saved tile priority round-trips.");
+try
+{
+    restored.Restore(PriorityMode.Tree, store.TileEntries, store.TreeEntries);
+    throw new Exception("Invalid save accepted.");
+}
+catch (InvalidOperationException) { }
+Check(restored.Mode == PriorityMode.Tile && restored.Get(a) == 3, "Failed restore must not change state.");
 Console.WriteLine("Priority store checks passed.");

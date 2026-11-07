@@ -26,6 +26,37 @@ internal sealed class PriorityStore
     private Dictionary<Guid, int> _trees = new();
 
     public PriorityMode Mode { get; private set; } = PriorityMode.Tile;
+    public IEnumerable<KeyValuePair<(int x, int y, int z), int>> TileEntries => _tiles;
+    public IEnumerable<KeyValuePair<Guid, int>> TreeEntries => _trees;
+
+    public void Restore(PriorityMode mode, IEnumerable<KeyValuePair<(int x, int y, int z), int>> tiles,
+        IEnumerable<KeyValuePair<Guid, int>> trees)
+    {
+        if (mode != PriorityMode.Tile && mode != PriorityMode.Tree)
+            throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unknown saved priority mode.");
+        if (tiles == null) throw new ArgumentNullException(nameof(tiles));
+        if (trees == null) throw new ArgumentNullException(nameof(trees));
+        var restoredTiles = new Dictionary<(int, int, int), int>();
+        var restoredTrees = new Dictionary<Guid, int>();
+        foreach (var entry in tiles)
+        {
+            ValidatePriority(entry.Value);
+            if (!restoredTiles.TryAdd(entry.Key, entry.Value))
+                throw new InvalidOperationException("Cannot restore priorities: duplicate tile.");
+        }
+        foreach (var entry in trees)
+        {
+            ValidatePriority(entry.Value);
+            if (entry.Key == Guid.Empty || !restoredTrees.TryAdd(entry.Key, entry.Value))
+                throw new InvalidOperationException("Cannot restore priorities: invalid or duplicate tree ID.");
+        }
+        if ((mode == PriorityMode.Tile && restoredTrees.Count != 0) ||
+            (mode == PriorityMode.Tree && restoredTiles.Count != 0))
+            throw new InvalidOperationException("Cannot restore priorities: saved entries do not match the saved mode.");
+        _tiles = restoredTiles;
+        _trees = restoredTrees;
+        Mode = mode;
+    }
 
     public int Get(TreeLocation tree) => Mode == PriorityMode.Tile
         ? (_tiles.TryGetValue(tree.Tile, out int tileValue) ? tileValue : Normal)
