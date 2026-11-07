@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 using HarmonyLib;
 using Timberborn.AreaSelectionSystem;
 using Timberborn.AreaSelectionSystemUI;
@@ -25,6 +26,7 @@ internal static class GamePatches
     private static Harmony? _harmony;
     private static TreePriorityService? _priorities;
     private static FieldInfo? _priorityField;
+    private static float _lastEmptyDecisionLog = -100;
 
     public static void Install(TreePriorityService priorities)
     {
@@ -39,17 +41,32 @@ internal static class GamePatches
             _priorityField = AccessTools.Field(priorityTool, "_priority")
                 ?? throw new MissingFieldException(priorityTool.FullName, "_priority");
             _priorities = priorities;
-            Patch(harmony, lumberjack, "FindCuttable", nameof(FindCuttablePrefix));
+            MethodInfo findCuttable = AccessTools.Method(lumberjack, "FindCuttable")
+                ?? throw new MissingMethodException(lumberjack.FullName, "FindCuttable");
+            // Performance Plus can replace this method and skip later prefixes. Priorities must run first.
+            var findPrefix = new HarmonyMethod(typeof(GamePatches), nameof(FindCuttablePrefix))
+            {
+                priority = HarmonyLib.Priority.First,
+                before = new[] { "acalc79.PerformancePlus.LumberjackCandidates" }
+            };
+            harmony.Patch(findCuttable, prefix: findPrefix);
             MethodInfo cut = AccessTools.Method(typeof(Cuttable), "Cut")
                 ?? throw new MissingMethodException(typeof(Cuttable).FullName, "Cut");
             harmony.Patch(cut, postfix: new HarmonyMethod(typeof(GamePatches), nameof(CutPostfix)));
             Patch(harmony, priorityTool, "ActionCallback", nameof(PriorityActionPrefix));
             Patch(harmony, priorityTool, "PreviewCallback", nameof(PriorityPreviewPrefix));
+            MethodInfo enter = AccessTools.Method(priorityTool, "Enter") ?? throw new MissingMethodException(priorityTool.FullName, "Enter");
+            MethodInfo exit = AccessTools.Method(priorityTool, "Exit") ?? throw new MissingMethodException(priorityTool.FullName, "Exit");
+            harmony.Patch(enter, postfix: new HarmonyMethod(typeof(GamePatches), nameof(PriorityToolEnterPostfix)));
+            harmony.Patch(exit, prefix: new HarmonyMethod(typeof(GamePatches), nameof(PriorityToolExitPrefix)));
             MethodInfo processInput = AccessTools.Method(priorityTool, "ProcessInput")
                 ?? throw new MissingMethodException(priorityTool.FullName, "ProcessInput");
             harmony.Patch(processInput, transpiler: new HarmonyMethod(typeof(GamePatches), nameof(PriorityPickerTranspiler)));
             _harmony = harmony;
-            Debug.Log("[Choose Your Trees] Installed lumberjack and Assign Priority hooks.");
+            var lumberjackMethod = AccessTools.Method(lumberjack, "FindCuttable");
+            var patchInfo = Harmony.GetPatchInfo(lumberjackMethod);
+            Debug.Log("[Choose Your Trees] Installed lumberjack and Assign Priority hooks. Lumberjack prefixes: " +
+                string.Join(", ", patchInfo.Prefixes.Select(p => p.owner + ":" + p.PatchMethod.DeclaringType?.FullName + "." + p.PatchMethod.Name)));
         }
         catch (Exception ex)
         {
@@ -76,12 +93,14 @@ internal static class GamePatches
     }
 
     // Let the game's own finder evaluate each tier, including accessibility, inventory and eligibility.
-    private static bool FindCuttablePrefix(int liftingCapacity, YielderFinder ____yielderFinder,
+    private static bool FindCuttablePrefix(object __instance, int liftingCapacity, YielderFinder ____yielderFinder,
         TreeCuttingArea ____treeCuttingArea, Inventory ____inventory, Accessible ____accessible,
         YieldStatus ____yieldStatus, ref YielderSearchResult __result)
     {
         if (_priorities == null) return true;
-        var candidates = ____treeCuttingArea.YieldersInArea.Where(y => !y.Reservable.Reserved).ToArray();
+        var all = ____treeCuttingArea.YieldersInArea.ToArray();
+        var candidates = all.Where(y => !y.Reservable.Reserved).ToArray();
+        var tiers = new string[5];
         for (int tier = 4; tier >= 0; tier--)
         {
             int desired = tier;
@@ -89,16 +108,54 @@ internal static class GamePatches
             {
                 var tree = y.GetComponent<TreeComponent>();
                 return tree != null && _priorities.GetPriority(tree) == desired;
-            });
+            }).ToArray();
             YielderSearchResult result = ____yielderFinder.FindLivingYielderWithoutAccessible(____inventory, ____accessible, liftingCapacity, eligibleTier);
+            tiers[tier] = $"{(Timberborn.PrioritySystem.Priority)tier}:{eligibleTier.Length}/{(result.HasYielder ? "selected" : result.NoYielderInRange ? "none-reachable-or-ready" : "no-capacity")}";
             if (!result.HasYielder) continue;
             ____yieldStatus.UpdateStatus(result);
             __result = result;
+            LogDecision(__instance, all, ____accessible, liftingCapacity, tiers, result.Yielder);
             return false;
+        }
+        if (Time.realtimeSinceStartup - _lastEmptyDecisionLog >= 10f)
+        {
+            _lastEmptyDecisionLog = Time.realtimeSinceStartup;
+            LogDecision(__instance, all, ____accessible, liftingCapacity, tiers, null);
         }
         // Preserve the vanilla status result when no eligible tree was found.
         return true;
     }
+
+    private static void LogDecision(object workplace, Yielder[] all, Accessible accessible, int capacity, string[] tiers, Yielder? chosen)
+    {
+        try
+        {
+            var lines = new StringBuilder();
+            foreach (var yielder in all)
+            {
+                var tree = yielder.GetComponent<TreeComponent>();
+                if (tree == null) continue;
+                int priority = _priorities!.GetPriority(tree);
+                if (priority == 2 && yielder != chosen) continue;
+                bool reachable = accessible.FindTerrainPath(yielder.CenterPosition, out var distance);
+                if (lines.Length > 4000) { lines.Append(" ...truncated"); break; }
+                lines.Append($" [tree={yielder.Coordinates} priority={(Timberborn.PrioritySystem.Priority)priority}" +
+                    $" reserved={yielder.Reservable.Reserved} yielding={yielder.IsYielding} reachable={reachable} distance={distance}]");
+            }
+            var location = (workplace as Timberborn.BaseComponentSystem.BaseComponent)?.GetComponent<BlockObject>()?.Coordinates;
+            Debug.Log($"[Choose Your Trees] Lumberjack decision workplace={location} capacity={capacity} " +
+                $"markedTrees={all.Length} available={all.Count(y => !y.Reservable.Reserved)} " +
+                $"tiers={string.Join(",", tiers.Where(t => t != null))} " +
+                $"chosen={(chosen != null ? chosen.Coordinates.ToString() : "none; using vanilla status")}.{lines}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[Choose Your Trees] Failed to collect lumberjack decision diagnostics: " + ex);
+        }
+    }
+
+    private static void PriorityToolEnterPostfix() => _priorities?.ShowPriorities();
+    private static void PriorityToolExitPrefix() => _priorities?.HidePriorities();
 
     private static void CutPostfix(Cuttable __instance) => _priorities?.OnTreeCut(__instance);
 
@@ -111,10 +168,10 @@ internal static class GamePatches
         {
             var tree = block.GetComponent<TreeComponent>();
             if (tree == null) continue;
-            _priorities.SetPriority(tree, (int)priority);
+            _priorities.SetPriority(tree, (int)priority, changed < 20 ? "priority tool" : null);
             changed++;
         }
-        if (changed > 0) Debug.Log($"[Choose Your Trees] Assigned priority {priority} to {changed} trees using the priority tool.");
+        if (changed > 0) Debug.Log($"[Choose Your Trees] Assigned priority {priority} to {changed} trees using the priority tool; details logged for up to 20 trees.");
     }
 
     private static bool PriorityPreviewPrefix(object __instance, IEnumerable<BlockObject> blockObjects,

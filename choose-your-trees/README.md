@@ -27,7 +27,9 @@ The build output is staged under `dist/` with the manifest at its root, the mod 
 
 ## Current state
 
-The project builds and has focused checks for priority storage, conversion and restore. Tree-panel controls, Assign Priority integration, lumberjack selection, saved priorities and Mod Settings integration are implemented but **have not been loaded or tested in-game**. Do not consider the package ready for normal saves yet.
+The project builds and has focused checks for priority storage, conversion and restore. An initial in-game test exposed panel styling and lumberjack-selection problems. The current revision uses the game panel styling, a subtle priority tint and explicit ordering before the Performance Plus lumberjack patch; these changes still need an in-game retest. Do not consider the package ready for normal saves yet.
+
+Diagnostic messages in the game log use the prefix `[Choose Your Trees]`. Priority edits include tree coordinates, cutting designation and reservation; lumberjack decisions include priority tiers, candidate reachability and the selected tree. Performance Plus's lumberjack optimization is bypassed when this mod selects an eligible tree.
 
 A tree's removal work is timed on the worker rather than exposed as durable partial chopping on the tree. An accurate chopping progress bar is not yet implemented; investigate live work and interruptions before deciding whether one can be shown reliably.
 
